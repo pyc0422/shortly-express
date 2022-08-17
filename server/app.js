@@ -81,7 +81,6 @@ app.post('/signup', (req, res, next) => {
   return models.Users.get({username})
     .then((data) => {
       if (data) {
-        console.log(data);
         //redirect to /signup
         res.redirect('/signup');
       } else {
@@ -103,7 +102,6 @@ app.post('/login', (req, res, next) => {
   const { username, password } = req.body;
   return models.Users.get({ username })
     .then((user) => {
-      console.log(password);
       if (!user) {
         return res.redirect('/login');
       }
