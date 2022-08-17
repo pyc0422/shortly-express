@@ -87,7 +87,7 @@ app.post('/signup', (req, res, next) => {
       } else {
         return models.Users.create({username, password})
           .then(() => {
-            // res.redirect('/');
+            res.redirect('/');
           })
           .catch((err) => {
             res.status(424).send(err);
@@ -101,15 +101,19 @@ app.post('/signup', (req, res, next) => {
 
 app.post('/login', (req, res, next) => {
   const { username, password } = req.body;
-  return models.Users.get({ username, password})
+  return models.Users.get({ username })
     .then((user) => {
-      return models.Users.compare({ password }, user.password, user.salt);
+      console.log(password);
+      if (!user) {
+        return res.redirect('/login');
+      }
+      return models.Users.compare(password, user.password, user.salt);
     })
     .then((boolean) => {
       if (!boolean) {
-        res.sendStatus(401);
+        res.redirect('/login');
       } else {
-        res.sendStatus(200);
+        res.redirect('/');
       }
     });
 
