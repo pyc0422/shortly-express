@@ -78,7 +78,7 @@ app.post('/links',
 /************************************************************/
 app.post('/signup', (req, res, next) => {
   const {username, password} = req.body;
-  return models.Users.get({username, password})
+  return models.Users.get({username})
     .then((data) => {
       if (data) {
         console.log(data);
@@ -87,7 +87,7 @@ app.post('/signup', (req, res, next) => {
       } else {
         return models.Users.create({username, password})
           .then(() => {
-            res.send();
+            // res.redirect('/');
           })
           .catch((err) => {
             res.status(424).send(err);
