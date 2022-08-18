@@ -2,28 +2,28 @@ const models = require('../models');
 const Promise = require('bluebird');
 
 module.exports.createSession = (req, res, next) => {
-  // console.log('session cookies: ', req.cookies);
+  return models.Sessions.get({hash: req.cookies.shortlyid})
+    .then((data) => {
+      if (!data) {
+        return models.Sessions.create()
+          .then((createData)=> {
+            return models.Sessions.get({id: createData.insertId})
+              .then((hashData) => {
+                req.session = {};
+                req.session.hash = hashData.hash;
+                res.cookie('shortlyid', hashData.hash);
+                next();
 
-  if (JSON.stringify(req.cookies) === '{}') {
-    return models.Sessions.create()
-      .then((data)=> {
-        return models.Sessions.get({id: data.insertId})
-          .then((hashData) => {
-            console.log('hashData: ', hashData.hash);
-            if (!req.session) {
-              req.session = {};
-              req.session.hash = hashData.hash;
-              res.cookie('shortlyid', hashData.hash);
-              // console.log( 'has cookies');
-              console.log('response cookies ', res.cookies);
-              return next();
-            }
+              });
           });
-      });
-  }
-  console.log('next test');
-
-  next();
+      } else {
+        req.session = data;
+        next();
+      }
+    })
+    .catch(err => {
+      console.log('err: ', err);
+    });
 };
 
 /************************************************************/
