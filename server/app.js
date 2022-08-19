@@ -80,7 +80,7 @@ app.post('/links',
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
-app.post('/signup', (req, res, next) => {
+app.post('/signup', (req, res) => {
   const {username, password} = req.body;
   return models.Users.get({username})
     .then((data) => {
@@ -102,7 +102,7 @@ app.post('/signup', (req, res, next) => {
 
 });
 
-app.post('/login', (req, res, next) => {
+app.post('/login', (req, res) => {
   const { username, password } = req.body;
   return models.Users.get({ username })
     .then((user) => {
@@ -112,6 +112,7 @@ app.post('/login', (req, res, next) => {
       return models.Users.compare(password, user.password, user.salt);
     })
     .then((boolean) => {
+      console.log('boolean: ', boolean);
       if (!boolean) {
         res.redirect('/login');
       } else {

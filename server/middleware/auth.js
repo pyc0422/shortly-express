@@ -34,6 +34,7 @@ module.exports.createSession = (req, res, next) => {
       if (!data) {
         console.log('no data request body: ', req.body.username);
         const { username } = req.body;
+        console.log({username});
         return models.Users.get({ username })
           .then((user) => {
             console.log('user: ', user);
