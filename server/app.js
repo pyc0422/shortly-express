@@ -17,7 +17,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.use(Auth.createSession);
 app.use(cookieParser);
-
+//app.use(Auth.verifySession);
 
 
 app.get('/',
@@ -96,10 +96,15 @@ app.post('/signup', (req, res) => {
             res.status(424).send(err);
           });
       }
-
     });
+});
 
+app.get('/login', (req, res) => {
+  res.render('login');
+});
 
+app.get('/signup', (req, res) => {
+  res.render('signup');
 });
 
 app.post('/login', (req, res) => {
@@ -107,18 +112,27 @@ app.post('/login', (req, res) => {
   return models.Users.get({ username })
     .then((user) => {
       if (!user) {
-        return res.redirect('/login');
-      }
-      return models.Users.compare(password, user.password, user.salt);
-    })
-    .then((boolean) => {
-      console.log('boolean: ', boolean);
-      if (!boolean) {
         res.redirect('/login');
-      } else {
-        res.redirect('/');
+        return;
       }
+      if (models.Users.compare(password, user.password, user.salt)) {
+        res.redirect('/');
+
+      } else {
+        res.redirect('/login');
+      }
+    })
+    .catch(err => {
+      console.log('post login err: ', err);
     });
+  // .then((boolean) => {
+  //   console.log('boolean: ', boolean);
+  //   if (!boolean) {
+  //     res.redirect('/login');
+  //   } else {
+  //     res.redirect('/');
+  //   }
+  // });
 
 });
 
@@ -127,6 +141,7 @@ app.post('/login', (req, res) => {
 // assume the route is a short code and try and handle it here.
 // If the short-code doesn't exist, send the user to '/'
 /************************************************************/
+
 
 app.get('/:code', (req, res, next) => {
 
@@ -151,5 +166,7 @@ app.get('/:code', (req, res, next) => {
       res.redirect('/');
     });
 });
+
+
 
 module.exports = app;
