@@ -15,22 +15,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
-app.use(Auth.createSession);
 app.use(cookieParser);
-//app.use(Auth.verifySession);
+app.use(Auth.createSession);
+// app.use(Auth.verifySession);
 
 
-app.get('/',
+app.get('/', Auth.verifySession,
   (req, res) => {
     res.render('index');
   });
 
-app.get('/create',
+app.get('/create', Auth.verifySession,
   (req, res) => {
     res.render('index');
   });
 
-app.get('/links',
+app.get('/links', Auth.verifySession,
   (req, res, next) => {
     models.Links.getAll()
       .then(links => {
@@ -41,7 +41,7 @@ app.get('/links',
       });
   });
 
-app.post('/links',
+app.post('/links', Auth.verifySession,
   (req, res, next) => {
     var url = req.body.url;
     if (!models.Links.isValidUrl(url)) {
@@ -117,7 +117,6 @@ app.post('/login', (req, res) => {
       }
       if (models.Users.compare(password, user.password, user.salt)) {
         res.redirect('/');
-
       } else {
         res.redirect('/login');
       }
