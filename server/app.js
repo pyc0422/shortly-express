@@ -113,6 +113,13 @@ app.get('/signup', (req, res) => {
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
+  if (!username) {
+    res.send("<script>alert('please enter a valid username!'); window.location.href = '/login'; </script>");
+
+  }
+  if (!password) {
+    res.send("<script>alert('please enter a valid password!'); window.location.href = '/login'; </script>");
+  }
   return models.Users.get({ username })
     .then((user) => {
       if (!user) {
@@ -123,7 +130,8 @@ app.post('/login', (req, res) => {
             res.redirect('/');
           });
       } else if (!models.Users.compare(password, user.password, user.salt)) {
-        res.redirect('/login');
+        res.send("<script>alert('please enter a valid username and password!');window.location.href = '/login'; </script>");
+        //res.redirect('/login');
       }
     })
     .catch(err => {
