@@ -3,6 +3,7 @@ const Promise = require('bluebird');
 
 module.exports.createSession = (req, res, next) => {
 
+
   if (req.cookies.shortlyid) {
     return models.Sessions.get({hash: req.cookies.shortlyid})
       .then(data => {

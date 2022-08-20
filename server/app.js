@@ -89,7 +89,11 @@ app.post('/signup', (req, res) => {
         res.redirect('/signup');
       } else {
         return models.Users.create({username, password})
-          .then(() => {
+          .then((user) => {
+            console.log('user create: ', user);
+            return models.Sessions.update({hash: req.session.hash}, {userId: user.insertId});
+          })
+          .then (() => {
             res.redirect('/');
           })
           .catch((err) => {
@@ -113,26 +117,32 @@ app.post('/login', (req, res) => {
     .then((user) => {
       if (!user) {
         res.redirect('/login');
-        return;
-      }
-      if (models.Users.compare(password, user.password, user.salt)) {
-        res.redirect('/');
-      } else {
+      } else if ( models.Users.compare(password, user.password, user.salt)) {
+        return models.Sessions.update({hash: req.session.hash}, {userId: user.id})
+          .then(() => {
+            res.redirect('/');
+          });
+      } else if (!models.Users.compare(password, user.password, user.salt)) {
         res.redirect('/login');
       }
     })
     .catch(err => {
-      console.log('post login err: ', err);
+      res.redirect('/login');
     });
-  // .then((boolean) => {
-  //   console.log('boolean: ', boolean);
-  //   if (!boolean) {
-  //     res.redirect('/login');
-  //   } else {
-  //     res.redirect('/');
-  //   }
-  // });
+});
 
+app.get('/logout', (req, res) => {
+  console.log('logout test');
+  return models.Sessions.get({ hash: req.session.hash })
+    .then(seshData => {
+      console.log('session data: ', seshData);
+      req.headers.cookie = {};
+      req.cookies = {};
+      return models.Sessions.delete({hash: seshData.hash});
+    })
+    .then(() => {
+      res.redirect('/');
+    });
 });
 
 /************************************************************/

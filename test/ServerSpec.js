@@ -275,7 +275,35 @@ describe('', function() {
         done();
       });
     });
+
+
+    it('Users that enter a correct password should have a valid session', function(done) {
+      var options = {
+        'method': 'POST',
+        'uri': 'http://127.0.0.1:4568/login',
+        'json': {
+          'username': 'Samantha',
+          'password': 'Samantha'
+        }
+      };
+
+      request(options, function(error, res, body) {
+        if (error) { return done(error); }
+        var queryString = `SELECT * FROM sessions JOIN users ON
+        users.id = sessions.userId WHERE users.username = ?`;
+        const username = JSON.parse(res.req.res.request.body).username;
+        db.query(queryString, username, function(err, results) {
+          if (err) { return done(err); }
+          expect(results[0].userId).to.exist;
+          done();
+        });
+
+      });
+    });
   });
+
+
+
 
   describe('Sessions Schema:', function() {
     it('contains a sessions table', function(done) {
@@ -568,9 +596,48 @@ describe('', function() {
         });
       });
     });
+
+    it('when logs out redirect to index page', function(done) {
+      addUser(function(err, res, body) {
+        if (err) { return done(err); }
+        var cookies = cookieJar.getCookies('http://127.0.0.1:4568/');
+        var cookieValue = cookies[0].value;
+
+        requestWithSession('http://127.0.0.1:4568/logout', function(error, response, resBody) {
+          if (error) { return done(error); }
+          expect(response.request.path).to.equal('/login');
+          expect(response.request.headers.referer).to.equal('http://127.0.0.1:4568/');
+          done();
+        });
+      });
+    });
+
+    it('keeps a user in database after they log out', function(done) {
+      addUser(function(err, res, body) {
+        console.log('body', body);
+        if (err) { return done(err); }
+        var cookies = cookieJar.getCookies('http://127.0.0.1:4568/');
+        var cookieValue = cookies[0].value;
+
+        requestWithSession('http://127.0.0.1:4568/logout', function(error, response, resBody) {
+          if (error) { return done(error); }
+          var cookies = cookieJar.getCookies('http://127.0.0.1:4568/');
+          var newCookieValue = cookies[0].value;
+          expect(cookieValue).to.not.equal(newCookieValue);
+          var queryString = 'SELECT * FROM users';
+          db.query(queryString, function(error2, users) {
+            console.log(users);
+            if (error2) { return done(error2); }
+            var user = users[0];
+            expect(user.username).to.equal('Vivian');
+            done();
+          });
+        });
+      });
+    });
   });
 
-  xdescribe('Privileged Access:', function() {
+  describe('Privileged Access:', function() {
 
     it('Redirects to login page if a user tries to access the main page and is not signed in', function(done) {
       request('http://127.0.0.1:4568/', function(error, res, body) {
@@ -597,7 +664,7 @@ describe('', function() {
     });
   });
 
-  xdescribe('Link creation:', function() {
+  describe('Link creation:', function() {
 
     var cookies = request.jar();
     var requestWithSession = request.defaults({ jar: cookies });
@@ -610,7 +677,7 @@ describe('', function() {
       }
     };
 
-    xbeforeEach(function(done) {
+    beforeEach(function(done) {
       var options = {
         'method': 'POST',
         'followAllRedirects': true,
